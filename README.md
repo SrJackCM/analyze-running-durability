@@ -23,10 +23,12 @@ analyze-running-durability/
 ├── references/
 │   ├── data-schema.md
 │   └── interpretation.md
-└── scripts/summarize_durability.py
+└── scripts/
+    ├── fit_to_summary.py
+    └── summarize_durability.py
 ```
 
-`SKILL.md` is the entry point. The reference files contain the data schema and interpretation framework. The Python script provides deterministic CSV normalization; it does not make a diagnosis or select training on its own.
+`SKILL.md` is the entry point. The reference files contain the data schema and interpretation framework. The Python scripts provide deterministic normalization (CSV summaries, and Garmin FIT extraction when `fitparse` is installed); they do not make a diagnosis or select training on their own.
 
 ## Install
 
@@ -64,6 +66,20 @@ python3 scripts/summarize_durability.py long-runs.csv > summary.md
 ```
 
 Use `--metric speed` or `--metric power` to require one output type. See [the data schema](references/data-schema.md) for supported columns.
+
+### FIT helper
+
+Garmin FIT files can be summarized directly - no manual CSV prep needed:
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install fitparse   # once
+.venv/bin/python scripts/fit_to_summary.py run1.fit run2.fit run3.fit \
+  | python3 scripts/summarize_durability.py - > summary.md
+```
+
+`fit_to_summary.py` emits the same schema CSV (to stdout) from raw records: first-/second-half average heart rate and speed (or power when the device has no speed data), duration, and mid-run temperature. `--min-minutes N` skips shorter sessions (default 45). `fitparse` is optional; without it the CSV path above still works with the standard library only.
+
+Fueling, RPE, first-change onset, and 24–48h recovery are not stored in FIT files - collect those from the runner and add them to the CSV. Missing fields should be reported, never invented.
 
 ## Interpretation and safety
 

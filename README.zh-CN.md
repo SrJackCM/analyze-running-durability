@@ -23,10 +23,12 @@ analyze-running-durability/
 ├── references/
 │   ├── data-schema.md
 │   └── interpretation.md
-└── scripts/summarize_durability.py
+└── scripts/
+    ├── fit_to_summary.py
+    └── summarize_durability.py
 ```
 
-`SKILL.md` 是技能入口；两份参考文档分别定义数据结构和解释框架；Python 脚本只负责确定性的 CSV 归一化计算，不会自动诊断或决定训练方案。
+`SKILL.md` 是技能入口；两份参考文档分别定义数据结构和解释框架；Python 脚本负责确定性的归一化计算（CSV 摘要，以及安装 `fitparse` 后对 Garmin FIT 的原始数据提取），不会自动诊断或决定训练方案。
 
 ## 安装
 
@@ -64,6 +66,20 @@ python3 scripts/summarize_durability.py long-runs.csv > summary.md
 ```
 
 使用 `--metric speed` 或 `--metric power` 可强制指定输出指标。支持的字段见[数据结构说明](references/data-schema.md)。
+
+### FIT 辅助脚本
+
+Garmin FIT 文件可以直接汇总，无需手工准备 CSV：
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install fitparse   # 只需一次
+.venv/bin/python scripts/fit_to_summary.py run1.fit run2.fit run3.fit \
+  | python3 scripts/summarize_durability.py - > summary.md
+```
+
+`fit_to_summary.py` 从原始记录输出同一结构的 CSV（写到 stdout）：上下半程平均心率与平均速度（设备没有速度数据时为功率）、时长和途中温度。`--min-minutes N` 跳过更短的跑步（默认 45 分钟）。`fitparse` 为可选依赖；没有它时，上面的 CSV 路径依然只依赖标准库。
+
+补给、RPE、首次变化出现时间、训练后 24–48 小时恢复情况不存储在 FIT 文件中——这些要向跑者收集后补进 CSV。缺失字段应如实标注，不应虚构。
 
 ## 解释与安全边界
 

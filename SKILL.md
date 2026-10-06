@@ -10,7 +10,7 @@ Treat durability as the timing and magnitude of performance or physiological det
 ## Choose the operating mode
 
 - **Design the field test:** Build a four-week plan with three comparable long runs and a recording template. Read `references/data-schema.md`.
-- **Normalize supplied data:** Convert pace to speed, gels to carbohydrate grams, drinks to milliliters, and totals to hourly rates. For CSV data, use `scripts/summarize_durability.py` when its schema fits.
+- **Normalize supplied data:** Convert pace to speed, gels to carbohydrate grams, drinks to milliliters, and totals to hourly rates. For CSV data, use `scripts/summarize_durability.py` when its schema fits. For Garmin FIT files, use `scripts/fit_to_summary.py` to extract first-/second-half heart rate, speed (or power), and mid-run temperature directly from the raw records.
 - **Analyze one session:** Describe what changed first and what followed. Do not infer a stable limitation from one run.
 - **Compare repeated sessions:** Read `references/interpretation.md`; assess comparability before interpreting trends.
 - **Analyze trail or ultra data:** Use comparable course segments rather than whole-run pace–heart-rate decoupling when grade, surface, altitude, stops, or hiking vary substantially.
@@ -133,3 +133,12 @@ Stop performance interpretation and recommend appropriate clinical evaluation wh
 - Read `references/data-schema.md` when collecting, cleaning, or requesting data.
 - Read `references/interpretation.md` when comparing runs or choosing a training emphasis.
 - Run `scripts/summarize_durability.py` for compatible CSV summaries; use its output as normalization support, not as an automatic diagnosis.
+- Run `scripts/fit_to_summary.py` for Garmin FIT files. It needs the optional `fitparse` dependency (see its header for one-line setup; install it in a venv to keep the core scripts stdlib-only), and chains into the CSV summarizer without intermediate files:
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install fitparse   # once
+.venv/bin/python scripts/fit_to_summary.py run1.fit run2.fit run3.fit \
+  | python3 scripts/summarize_durability.py -
+```
+
+FIT files supply heart rate, speed/power, duration, and temperature automatically. Fueling, RPE, first-change onset, and 24–48h recovery are not stored in FIT - ask the runner for them and add them to the CSV by hand. Missing fields must be reported, never invented.

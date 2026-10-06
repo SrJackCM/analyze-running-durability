@@ -159,12 +159,16 @@ def render(rows: list[dict[str, object]]) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("csv_file", type=Path, help="CSV containing summarized long-run data")
+    parser.add_argument("csv_file", type=Path,
+                        help="CSV containing summarized long-run data; "
+                             "use '-' to read stdin (e.g. piped from fit_to_summary.py)")
     parser.add_argument("--metric", choices=("auto", "speed", "power"), default="auto")
     args = parser.parse_args()
 
     try:
-        with args.csv_file.open(encoding="utf-8-sig", newline="") as handle:
+        # '-' reads stdin so the two scripts can be chained without a temp file
+        handle = sys.stdin if str(args.csv_file) == "-" else args.csv_file.open(encoding="utf-8-sig", newline="")
+        with handle:
             source_rows = list(csv.DictReader(handle))
         if not source_rows:
             raise ValueError("CSV has no data rows")
